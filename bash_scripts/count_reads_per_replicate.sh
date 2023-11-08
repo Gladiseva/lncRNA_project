@@ -22,7 +22,7 @@ for file in "$input_dir"/*_R1_001*.fastq; do
     replicate=$(basename "$file" | cut -d'_' -f1,2)
 
     # Count the reads per replicate just from  R1 file
-    read_count=$(awk '/^@/{c++}END{print c/4}' "$file")
+    read_count=$(awk '/^@/{c++}END{print c}' "$file")
 
     replicate_counts["$replicate"]="$read_count"
 done
