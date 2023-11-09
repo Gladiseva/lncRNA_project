@@ -9,13 +9,13 @@
 # load fastqc module
 module add UHTS/Quality_control/fastqc/0.11.9
 
-input_dir="/data/users/lgladiseva/rna_seq/reads"
-output_dir="/data/users/lgladiseva/rna_seq/quality_control"
+INPUT_DIR="/data/users/lgladiseva/rna_seq/reads"
+OUTPUT_DIR="/data/users/lgladiseva/rna_seq/quality_control"
 
-mkdir -p $output_dir
+mkdir -p $OUTPUT_DIR
 
-for file in $input_dir/*.fastq;
+for file in $INPUT_DIR/*.fastq;
 # default thread count is 4
 do
-    fastqc -t 2 -o $output_dir "$file";
+    fastqc -t 2 -o $OUTPUT_DIR "$file";
 done

@@ -8,16 +8,15 @@
 #SBATCH --mem=4G
 #SBATCH --partition=pall
 
-input_dir="/data/users/lgladiseva/rna_seq/reads"
+INPUT_DIR="/data/users/lgladiseva/rna_seq/reads"
+OUTPUT_FILE="/data/users/lgladiseva/rna_seq/count_reads_per_sample_output.txt"
 
 declare -A replicate_counts
 
-output_file="/data/users/lgladiseva/rna_seq/count_reads_per_sample_output.txt"
-
-exec > "$output_file"
+exec > "$OUTPUT_FILE"
 exec 2>&1
 
-for file in "$input_dir"/*_R1_001*.fastq; do
+for file in "$INPUT_DIR"/*_R1_001*.fastq; do
     # Extract the replicate name from the file name
     replicate=$(basename "$file" | cut -d'_' -f1,2)
 
