@@ -6,7 +6,6 @@
 #SBATCH --time=20:00:00
 #SBATCH --mem=4G
 
-# load fastqc module
 module add UHTS/Quality_control/fastqc/0.11.9
 
 INPUT_DIR="/data/users/lgladiseva/rna_seq/reads"

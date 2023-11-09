@@ -6,7 +6,6 @@
 #SBATCH --time=00:50:00
 #SBATCH --mem-per-cpu=8G
 
-# load the module for alignment
 module add UHTS/Aligner/hisat/2.2.1
 module add UHTS/Analysis/samtools/1.10
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=2G
