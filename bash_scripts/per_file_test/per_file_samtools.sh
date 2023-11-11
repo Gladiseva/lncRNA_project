@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --CPUS-PER-TASK=4
-#SBATCH --MEM-PER-CPU=8G
-#SBATCH --TIME=00:55:00
-#SBATCH --PARTITION=PALL
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=8G
+#SBATCH --time=00:55:00
+#SBATCH --partition=pall
 
 module add UHTS/Analysis/samtools/1.10
 
