@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --mail-type=fail
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --time=04:00:00
 #SBATCH --mem-per-cpu=8G
 
@@ -21,10 +21,10 @@ for file in "$reads"/*_R1_001*.fastq; do
 
     # Sort and index the BAM file
     samtools sort -@ $THREADS -o "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_aligned_reads.sorted.bam" $mapped_file
-    samtools index "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_aligned_reads.sorted.bam"
+    samtools index -@ $THREADS "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_aligned_reads.sorted.bam"
 
     # Get alignment statistics
-    samtools flagstat "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_aligned_reads.sorted.bam" > "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_alignment_stats.txt"
+    samtools flagstat -@ $THREADS "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_aligned_reads.sorted.bam" > "/data/users/lgladiseva/rna_seq/mapped_reads/${replicate}_alignment_stats.txt"
 done
 
 
