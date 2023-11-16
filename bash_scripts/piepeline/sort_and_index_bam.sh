@@ -21,8 +21,5 @@ for file in "$READS"/*_R1_001*.fastq; do
     # Sort and index the BAM file
     samtools sort -@ $THREADS -o $sorted_file $mapped_file
     samtools index -@ $THREADS $sorted_file
-
-    # Get alignment statistics
-    samtools flagstat -@ $THREADS $sorted_file > "$MAPPED_READS/${replicate}_alignment_stats.txt"
 done
 
