@@ -21,7 +21,7 @@ genes=$(awk '$3=="transcript" {print $10}' $ASSEMBLY | sort -u | wc -l)
 echo "Number of genes: $genes" >> $OUTPUT_FILE
 
 ## Number of novel:
-# Transcripts total - Transcripts with reference
+# Novel Transcripts
 novel_transcripts=$(awk '$3=="transcript" && $12 !~ "ENS" {print}' $ASSEMBLY | sort -u | wc -l)
 echo "Number of novel transcripts: $novel_transcripts" >> $OUTPUT_FILE
 
@@ -29,7 +29,7 @@ echo "Number of novel transcripts: $novel_transcripts" >> $OUTPUT_FILE
 novel_exons=$(awk '$3=="exon" && $12 !~ "ENS" {print}' $ASSEMBLY | sort -u | wc -l)
 echo "Number of novel exons: $novel_exons" >> $OUTPUT_FILE
 
-## Single exon transcripts/genes
+## Number of:
 # Single Exon Genes
 single_exon_genes=$(awk '$3=="exon" {print $10}' $ASSEMBLY |sort | uniq -c | awk '$1 == 1' |  wc -l)
 echo "Number of single exon gene : $single_exon_genes" >> $OUTPUT_FILE
