@@ -1,11 +1,10 @@
 #!/bin/bash
 
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=16G
 #SBATCH --time=04:00:00
 
 module add UHTS/Aligner/stringtie/1.3.3b
-
 
 THREADS=$SLURM_CPUS_PER_TASK
 REPLICATE=$1
