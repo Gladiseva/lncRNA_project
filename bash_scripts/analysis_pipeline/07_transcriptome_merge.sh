@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#SBATCH --mail-type=fail
 #SBATCH --cpus-per-task=1
 #SBATCH --time=00:50:00
 #SBATCH --mem-per-cpu=4G
@@ -17,5 +16,5 @@ for type_info in "${file_types[@]}"; do
     gtf=${type_array[1]}
 
     # Submit the job using the replicate name, type, and GTF file
-    sbatch /data/users/lgladiseva/rna_seq/scripts_v2/test_per_file/per_file_transcriptome_merge.sh "$type" "$gtf"
+    sbatch /data/users/lgladiseva/rna_seq/analysis_pipeline/per_file_scripts/per_file_transcriptome_merge.sh "$type" "$gtf"
 done

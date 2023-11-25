@@ -23,6 +23,6 @@ for type_info in "${file_types[@]}"; do
         replicate=$(basename "$file" | cut -d'_' -f1,2 | sed 's/_L3//' )
 
         # Submit the job using the replicate name, type, and GTF file
-        sbatch /data/users/lgladiseva/rna_seq/scripts_v2/per_file_scripts/per_file_transcriptome_assembly.sh "$replicate" "$type" "$gtf"
+        sbatch /data/users/lgladiseva/rna_seq/analysis_pipeline/per_file_scripts/per_file_transcriptome_assembly.sh "$replicate" "$type" "$gtf"
     done
 done
