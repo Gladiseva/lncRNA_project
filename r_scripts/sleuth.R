@@ -65,3 +65,9 @@ sleuth_object <- sleuth_lrt(sleuth_object, 'reduced', 'full')
 #exploratory analysis
 sleuth_live(sleuth_object)
 plot_pca(sleuth_object, color_by = 'condition')
+plot_group_density(sleuth_object,
+                   use_filtered = TRUE,
+                   units = "est_counts",
+                   trans = "log",
+                   grouping = setdiff(colnames(sleuth_object$sample_to_covariates),
+                                                     "sample"), offset = 1)
