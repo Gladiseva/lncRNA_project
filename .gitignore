@@ -1,4 +1,5 @@
 .DS_Store
 .Rproj.user
 r_scripts.Rproj
+*.png
 /r_scripts/results/

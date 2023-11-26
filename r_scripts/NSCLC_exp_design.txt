@@ -1,0 +1,7 @@
+sample condition
+3_2 paraclonal
+3_4 paraclonal
+3_7 paraclonal
+P1 parental
+P2 parental
+P3 parental
