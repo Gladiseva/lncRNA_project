@@ -3,8 +3,10 @@
 #BiocManager::install("rhdf5")
 #install.packages("devtools")
 #devtools::install_github("pachterlab/sleuth")
+#install.packages("BiocManager")
+#BiocManager::install("biomaRt")
 library("sleuth")
-
+set.seed(123)
 #specify where the kallisto results are stored.
 sample_id <- dir(file.path(".", "results"))
 
@@ -26,26 +28,8 @@ sample2condition <- dplyr::mutate(sample2condition, path = kallisto_dirs)
 #(2) estimate parameters for the sleuth response error measurement (full) model 
 #(3) estimate parameters for the sleuth reduced model
 #(4) perform differential analysis (testing) using the likelihood ratio test.
-sleuth_object <- sleuth_prep(sample2condition, extra_bootstrap_summary = TRUE)
-sleuth_object <- sleuth_fit(sleuth_object, ~condition, 'full')
-sleuth_object <- sleuth_fit(sleuth_object, ~1, 'reduced')
-#2 NA values were found during variance shrinkage estimation due to mean observation values outside of the range used for the LOESS fit.
-#The LOESS fit will be repeated using exact computation of the fitted surface to extrapolate the missing values.
-#These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
-sleuth_object <- sleuth_lrt(sleuth_object, 'reduced', 'full')
-models(sleuth_object)
-
-sleuth_table <- sleuth_results(sleuth_object, 'reduced:full', 'lrt', show_all = FALSE)
-#top 20 significant genes with a (Benjamini-Hochberg multiple testing corrected) q-value <= 0.05.
-sleuth_significant <- dplyr::filter(sleuth_table, qval <= 0.05)
-head(sleuth_significant, 20)
-
-plot_bootstrap(sleuth_object, "ENST00000223642.3", units = "est_counts", color_by = "condition")
 
 # add gene names from ENSEMBL using biomaRt
-install.packages("BiocManager")
-BiocManager::install("biomaRt")
-
 #collect gene names with
 mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                          dataset = "hsapiens_gene_ensembl",
@@ -60,9 +44,20 @@ sleuth_object <- sleuth_prep(sample2condition,
                              extra_bootstrap_summary = TRUE)
 sleuth_object <- sleuth_fit(sleuth_object, ~condition, 'full')
 sleuth_object <- sleuth_fit(sleuth_object, ~1, 'reduced')
+#NA values were found during variance shrinkage estimation due to mean observation values outside of the range used for the LOESS fit.
+#The LOESS fit will be repeated using exact computation of the fitted surface to extrapolate the missing values.
+#These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
 sleuth_object <- sleuth_lrt(sleuth_object, 'reduced', 'full')
 
+models(sleuth_object)
+
+sleuth_table <- sleuth_results(sleuth_object, 'reduced:full', 'lrt', show_all = FALSE)
+#top 20 significant genes with a (Benjamini-Hochberg multiple testing corrected) q-value <= 0.05.
+sleuth_significant <- dplyr::filter(sleuth_table, qval <= 0.05)
+head(sleuth_significant, 20)
+
 #exploratory analysis
+plot_bootstrap(sleuth_object, "ENST00000223642.3", units = "est_counts", color_by = "condition")
 sleuth_live(sleuth_object)
 plot_pca(sleuth_object, color_by = 'condition')
 plot_group_density(sleuth_object,
