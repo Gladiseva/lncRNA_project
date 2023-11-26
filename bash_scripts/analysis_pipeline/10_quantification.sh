@@ -22,4 +22,4 @@ replicate=$(basename "$r1_file" | cut -d'_' -f1,2 | sed 's/_L3//' )
 r2_file=$(find "$READS" -name "${replicate}_L3_R2_001"*.fastq -type f)
 
 # Perform Kallisto quantification in paired-end mode
-kallisto quant -i $EXPRESSION/all_kallisto_index -o $EXPRESSION/${replicate}_output --rf-stranded --threads $THREADS $r1_file $r2_file
+kallisto quant -i $EXPRESSION/all_kallisto_index -o $EXPRESSION/${replicate}_output -b 40 --rf-stranded --threads $THREADS $r1_file $r2_file
