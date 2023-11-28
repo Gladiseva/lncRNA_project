@@ -55,24 +55,19 @@ sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
 models(sleuth_object)
 
-sleuth_table <- sleuth_results(sleuth_object,
-                               "reduced:full",
-                               "lrt",
-                               show_all = FALSE)
-
-# top 20 significant genes with a q-value <= 0.05.
-sleuth_significant <- dplyr::filter(sleuth_table, qval <= 0.05)
-head(sleuth_significant, 20)
-
 # Test significant differences between conditions using the Wald test
-# Wald test for differential expression of isoforms
-
+# Wald test for differential expression of isoforms. var oe -> observed2expected
 oe <- sleuth_wt(sleuth_object, which_beta = "conditionparental")
 sleuth_results_oe <- sleuth_results(oe,
                                     test = "conditionparental",
                                     show_all = TRUE)
-head(sleuth_results_oe, 20)
+
+# top 20 significant genes with a q-value <= 0.05.
+sleuth_significant <- dplyr::filter(sleuth_results_oe, qval <= 0.05)
+head(sleuth_significant, 20)
+
 sleuth_results_oe
+
 sleuth_live(oe)
 
 # Create a volcano plot
