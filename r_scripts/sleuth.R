@@ -31,13 +31,14 @@ sample2condition <- dplyr::mutate(sample2condition, path = kallisto_dirs)
 #(3) estimate parameters for the sleuth reduced model
 #(4) perform differential analysis (testing) using the likelihood ratio test.
 
-# add gene names from ENSEMBL using biomaRt
+# add gene names from ENSEMBL using biomaRt (GRCh38)
 # collect gene names with
 mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                          dataset = "hsapiens_gene_ensembl",
                          host = "ensembl.org")
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
-                                     "external_gene_name"), mart = mart)
+                                     "external_gene_name", "gene_biotype",
+                                     "transcript_biotype"), mart = mart)
 t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id,
                      ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
 # By default the transformation of counts is natural log
@@ -48,7 +49,7 @@ sleuth_object <- sleuth_prep(sample2condition,
                              transformation_function = function(x) log2(x + 0.5))
 sleuth_object <- sleuth_fit(sleuth_object, ~condition, "full")
 sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
-# NA values were found during variance shrinkage estimation
+# NA values were found during variance shrinkage estimation LOESS
 # These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
 
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
@@ -70,7 +71,8 @@ oe <- sleuth_wt(sleuth_object, which_beta = "conditionparental")
 sleuth_results_oe <- sleuth_results(oe,
                                     test = "conditionparental",
                                     show_all = TRUE)
-head(sleuth_results_oe)
+head(sleuth_results_oe, 20)
+sleuth_results_oe
 sleuth_live(oe)
 
 # Create a volcano plot
@@ -80,7 +82,7 @@ ggplot(sleuth_results_oe, aes(x = b, y = -log10(pval))) +
   geom_text_repel(aes(label = ext_gene), 
                   data = subset(sleuth_results_oe, qval < significance_threshold), 
                   box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
-  scale_color_manual(values = c("grey", "red")) +       # Customize colors
+  scale_color_manual(values = c("blue", "red")) +       # Customize colors
   labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
   theme_minimal()
 
