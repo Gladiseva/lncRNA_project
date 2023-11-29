@@ -67,6 +67,26 @@ sleuth_significant <- dplyr::filter(sleuth_results_oe, qval <= 0.05)
 head(sleuth_significant, 20)
 
 sleuth_results_oe
+# Assuming sleuth_results_oe is your data frame
+write.csv(sleuth_results_oe, file = "sleuth_results_full.csv", row.names = FALSE)
+
+# Print or further process the unique gene biotypes
+unique_gene_biotypes <- unique(sleuth_results_oe$gene_biotype)
+print(unique_gene_biotypes)
+
+# Print or further process the unique gene biotypes
+unique_transcript_biotypes <- unique(sleuth_results_oe$transcript_biotype)
+print(unique_transcript_biotypes)
+
+# lncRNA
+lncRNA_result <- subset(sleuth_results_oe, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
+head(lncRNA_result)
+write.csv(lncRNA_result, file = "sleuth_results_lncRNA.csv", row.names = FALSE)
+
+# protein_coding
+protein_coding_result <- subset(sleuth_results_oe, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
+head(protein_coding_result)
+write.csv(protein_coding_result, file = "sleuth_results_protein_coding.csv", row.names = FALSE)
 
 sleuth_live(oe)
 
@@ -76,6 +96,22 @@ ggplot(sleuth_results_oe, aes(x = b, y = -log10(pval))) +
   geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
   geom_text_repel(aes(label = ext_gene), 
                   data = subset(sleuth_results_oe, qval < significance_threshold), 
+                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
+  scale_color_manual(values = c("blue", "red")) +       # Customize colors
+  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
+  theme_minimal()
+ggplot(lncRNA_result, aes(x = b, y = -log10(pval))) +
+  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
+  geom_text_repel(aes(label = ext_gene), 
+                  data = subset(lncRNA_result, qval < significance_threshold), 
+                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
+  scale_color_manual(values = c("blue", "red")) +       # Customize colors
+  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
+  theme_minimal()
+ggplot(protein_coding_result, aes(x = b, y = -log10(pval))) +
+  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
+  geom_text_repel(aes(label = ext_gene), 
+                  data = subset(protein_coding_result, qval < significance_threshold), 
                   box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
   scale_color_manual(values = c("blue", "red")) +       # Customize colors
   labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +

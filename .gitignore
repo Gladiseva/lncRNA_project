@@ -4,3 +4,4 @@ r_scripts.Rproj
 *.png
 /r_scripts/results/
 .Rhistory
+.csv
