@@ -6,6 +6,7 @@ if (!require("devtools")) install.packages("devtools")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("ggrepel")) install.packages("ggrepel")
 if (!require("readxl")) install.packages("readxl")
+install.packages("svglite")
 
 library("rhdf5")
 library("devtools")
@@ -15,6 +16,9 @@ library("biomaRt")
 library("ggplot2")
 library("ggrepel")
 library("readxl")
+library(svglite)
+install.packages("pheatmap")
+library(pheatmap)
 
 set.seed(123)
 
@@ -44,7 +48,7 @@ sample2condition <- dplyr::mutate(sample2condition, path = kallisto_dirs)
 # collect gene names with
 mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                          dataset = "hsapiens_gene_ensembl",
-                         host = "ensembl.org")
+                         host = "https://ensembl.org")
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
                                      "external_gene_name", "gene_biotype",
                                      "transcript_biotype"), mart = mart)
@@ -73,7 +77,7 @@ sleuth_results_oe <- sleuth_results(oe,
 
 # top 20 significant genes with a q-value <= 0.05.
 sleuth_significant <- dplyr::filter(sleuth_results_oe, qval <= 0.05)
-head(sleuth_significant, 20)
+sleuth_sihnificant_top_20 <- head(sleuth_significant, 20)
 
 # save outputs to csv
 write.csv(sleuth_results_oe, file = "sleuth_results_full.csv", row.names = FALSE)
@@ -86,20 +90,21 @@ print(unique_gene_biotypes)
 print(unique_transcript_biotypes)
 
 # lncRNA
-lncRNA_result <- subset(sleuth_significant, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
-head(lncRNA_result)
-write.csv(lncRNA_result, file = "sleuth_results_lncRNA_significant.csv", row.names = FALSE)
+lncRNA_result <- subset(sleuth_results_oe, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
+lncRNA_result_top_20 <- head(lncRNA_result, 20)
+write.csv(lncRNA_result, file = "sleuth_results_lncRNA.csv", row.names = FALSE)
 
+lncRNA_result_significant <- subset(sleuth_significant, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
+lncRNA_significant_result_top_20 <- head(lncRNA_result_significant, 20)
 # protein_coding
-protein_coding_result <- subset(sleuth_significant, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
-head(protein_coding_result)
-write.csv(protein_coding_result, file = "sleuth_results_protein_coding_significant.csv", row.names = FALSE)
+protein_coding_result <- subset(sleuth_results_oe, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
+protein_coding_result_top_20 <- head(protein_coding_result, 20)
+write.csv(protein_coding_result, file = "sleuth_results_protein_coding.csv", row.names = FALSE)
 
 # NAs
-NA_coding_result <- subset(sleuth_significant, is.na(gene_biotype) | is.na(transcript_biotype))
-head(NA_coding_result)
-dim(NA_coding_result)
-write.csv(NA_coding_result, file = "sleuth_results_NAs_significant.csv", row.names = FALSE)
+NA_result <- subset(sleuth_results_oe, is.na(gene_biotype) | is.na(transcript_biotype))
+NA_result_top_20 <- head(NA_result, 20)
+write.csv(NA_result, file = "sleuth_results_NAs.csv", row.names = FALSE)
 
 # Create a volcano plot
 create_volcano_plot <- function(data, label_column, significance_threshold = 0.05, title = "Volcano Plot") {
@@ -113,8 +118,8 @@ create_volcano_plot <- function(data, label_column, significance_threshold = 0.0
     theme_minimal()
 }
 
-# significant_all (ext_gene as label)
-create_volcano_plot(sleuth_significant, label_column = "ext_gene")
+# all (ext_gene as label)
+create_volcano_plot(sleuth_results_oe, label_column = "ext_gene")
 
 # lncRNA_result (ext_gene as label)
 create_volcano_plot(lncRNA_result, label_column = "ext_gene")
@@ -122,8 +127,8 @@ create_volcano_plot(lncRNA_result, label_column = "ext_gene")
 # protein_coding_result (ext_gene as label)
 create_volcano_plot(protein_coding_result, label_column = "ext_gene")
 
-# NA_coding_result (target_id as label)
-create_volcano_plot(NA_coding_result, label_column = "target_id")
+# NA_result (target_id as label)
+create_volcano_plot(NA_result, label_column = "target_id")
 
 # exploratory analysis
 # interactive visualization
@@ -156,3 +161,63 @@ ens_gene_not_in_df_two <- setdiff(unique_ens_gene, unique_ensembl_gene_id)
 cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens_gene_not_in_df_two), "\n")
 ens_gene_not_in_df_two
 
+
+# occurencies per gene
+sleuth_genes <- sleuth_gene_table(oe, 'conditionparental', test_type ='wt',
+                                  which_group = 'ext_gene')
+kallisto_output <- read_kallisto("results/3_2/abundance.tsv", read_bootstrap = FALSE)
+#normalized expression values and estimated counts as the expression units
+counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "est_counts")
+write.csv(counts_per_replicate, file = "counts_per_replicate.csv", row.names = TRUE)
+# Read the data from the CSV file (adjust the file path accordingly)
+## for all significant top 20
+data <- read.csv("counts_per_replicate.csv", row.names = 1)
+data_filtered <- data[rownames(data) %in% sleuth_sihnificant_top_20$target_id, ]
+
+data_matrix <- as.matrix(data_filtered)
+
+# Create a heatmap using pheatmap
+pheatmap(data_matrix, 
+         cluster_cols = FALSE, # Turn off column clustering
+         scale = "row",        # Scale rows (genes) by default
+         main = "Heatmap Example",
+         annotation_col = NULL)  # Turn off column annotations
+
+## for lncRNAs top 20
+data <- read.csv("counts_per_replicate.csv", row.names = 1)
+data_filtered <- data[rownames(data) %in% lncRNA_result_top_20$target_id, ]
+
+data_matrix <- as.matrix(data_filtered)
+
+# Create a heatmap using pheatmap
+pheatmap(data_matrix, 
+         cluster_cols = FALSE, # Turn off column clustering
+         scale = "row",        # Scale rows (genes) by default
+         main = "Heatmap Example",
+         annotation_col = NULL)  # Turn off column annotations
+
+## for protein coding top 20
+data <- read.csv("counts_per_replicate.csv", row.names = 1)
+data_filtered <- data[rownames(data) %in% protein_coding_result_top_20$target_id, ]
+
+data_matrix <- as.matrix(data_filtered)
+
+# Create a heatmap using pheatmap
+pheatmap(data_matrix, 
+         cluster_cols = FALSE, # Turn off column clustering
+         scale = "row",        # Scale rows (genes) by default
+         main = "Heatmap Example",
+         annotation_col = NULL)  # Turn off column annotations
+
+## for NA_result_top_20
+data <- read.csv("counts_per_replicate.csv", row.names = 1)
+data_filtered <- data[rownames(data) %in% NA_result_top_20$target_id, ]
+
+data_matrix <- as.matrix(data_filtered)
+
+# Create a heatmap using pheatmap
+pheatmap(data_matrix, 
+         cluster_cols = FALSE, # Turn off column clustering
+         scale = "row",        # Scale rows (genes) by default
+         main = "Heatmap Example",
+         annotation_col = NULL)  # Turn off column annotations
