@@ -58,10 +58,10 @@ sleuth_object <- sleuth_prep(sample2condition,
                              transformation_function = function(x) log2(x + 0.5))
 sleuth_object <- sleuth_fit(sleuth_object, ~condition, "full")
 sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
-# NA values were found during variance shrinkage estimation LOESS
+# OUTPUT: NA values were found during variance shrinkage estimation LOESS
 # These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
-
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
+
 models(sleuth_object)
 
 # Test significant differences between conditions using the Wald test
@@ -75,16 +75,14 @@ sleuth_results_oe <- sleuth_results(oe,
 sleuth_significant <- dplyr::filter(sleuth_results_oe, qval <= 0.05)
 head(sleuth_significant, 20)
 
-sleuth_results_oe
+# save outputs to csv
 write.csv(sleuth_results_oe, file = "sleuth_results_full.csv", row.names = FALSE)
 write.csv(sleuth_significant, file = "sleuth_results_significant.csv", row.names = FALSE)
 
-# Print or further process the unique gene biotypes
+# Print or further process the unique gene/transcript biotypes
 unique_gene_biotypes <- unique(sleuth_results_oe$gene_biotype)
-print(unique_gene_biotypes)
-
-# Print or further process the unique transcript biotypes
 unique_transcript_biotypes <- unique(sleuth_results_oe$transcript_biotype)
+print(unique_gene_biotypes)
 print(unique_transcript_biotypes)
 
 # lncRNA
@@ -102,7 +100,6 @@ NA_coding_result <- subset(sleuth_significant, is.na(gene_biotype) | is.na(trans
 head(NA_coding_result)
 dim(NA_coding_result)
 write.csv(NA_coding_result, file = "sleuth_results_NAs_significant.csv", row.names = FALSE)
-
 
 # Create a volcano plot
 create_volcano_plot <- function(data, label_column, significance_threshold = 0.05, title = "Volcano Plot") {
@@ -128,7 +125,6 @@ create_volcano_plot(protein_coding_result, label_column = "ext_gene")
 # NA_coding_result (target_id as label)
 create_volcano_plot(NA_coding_result, label_column = "target_id")
 
-
 # exploratory analysis
 # interactive visualization
 sleuth_live(oe)
@@ -146,9 +142,6 @@ plot_group_density(sleuth_object,
                                       "sample"), offset = 1)
 
 # check if found genes are present in the paper
-df = read_excel("1-s2.0-S147655861830232X-mmc3.xlsx", sheet=4)
-write.csv(df, gsub("xlsx", "4.csv", "1-s2.0-S147655861830232X-mmc3.xlsx"), row.names=FALSE)
-
 df_one <- read.csv("sleuth_results_significant.csv")
 df_two <- read.csv("parental_vs_para_from_paper.csv")
 
