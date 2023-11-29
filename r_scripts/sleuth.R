@@ -1,16 +1,23 @@
 ## Instalation
-BiocManager::install("rhdf5")
-install.packages("devtools")
-devtools::install_github("pachterlab/sleuth")
-install.packages("BiocManager")
-BiocManager::install("biomaRt")
+# Install and load packages
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("rhdf5", "sleuth", "biomaRt"))
+if (!require("devtools")) install.packages("devtools")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("ggrepel")) install.packages("ggrepel")
+if (!require("readxl")) install.packages("readxl")
+
+library("rhdf5")
+library("devtools")
 library("sleuth")
-library(ggplot2)
-install.packages("ggrepel")
-library(ggrepel)
-install.packages("readxl")
-library(readxl)
+library("BiocManager")
+library("biomaRt")
+library("ggplot2")
+library("ggrepel")
+library("readxl")
+
 set.seed(123)
+
 # specify where the kallisto results are stored.
 sample_id <- dir(file.path(".", "results"))
 
@@ -96,48 +103,41 @@ head(NA_coding_result)
 dim(NA_coding_result)
 write.csv(NA_coding_result, file = "sleuth_results_NAs_significant.csv", row.names = FALSE)
 
-sleuth_live(oe)
 
 # Create a volcano plot
-significance_threshold <- 0.05
-ggplot(sleuth_significant, aes(x = b, y = -log10(pval))) +
-  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
-  geom_text_repel(aes(label = ext_gene), 
-                  data = subset(sleuth_significant, qval < significance_threshold), 
-                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
-  scale_color_manual(values = c("blue", "red")) +       # Customize colors
-  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
-  theme_minimal()
-ggplot(lncRNA_result, aes(x = b, y = -log10(pval))) +
-  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
-  geom_text_repel(aes(label = ext_gene), 
-                  data = subset(lncRNA_result, qval < significance_threshold), 
-                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
-  scale_color_manual(values = c("blue", "red")) +       # Customize colors
-  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
-  theme_minimal()
-ggplot(protein_coding_result, aes(x = b, y = -log10(pval))) +
-  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
-  geom_text_repel(aes(label = ext_gene), 
-                  data = subset(protein_coding_result, qval < significance_threshold), 
-                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
-  scale_color_manual(values = c("blue", "red")) +       # Customize colors
-  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
-  theme_minimal()
-ggplot(NA_coding_result, aes(x = b, y = -log10(pval))) +
-  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
-  geom_text_repel(aes(label = target_id), 
-                  data = subset(NA_coding_result, qval < significance_threshold), 
-                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
-  scale_color_manual(values = c("blue", "red")) +       # Customize colors
-  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
-  theme_minimal()
+create_volcano_plot <- function(data, label_column, significance_threshold = 0.05, title = "Volcano Plot") {
+  ggplot(data, aes(x = b, y = -log10(pval))) +
+    geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +
+    geom_text_repel(aes(label = get(label_column)), 
+                    data = subset(data, qval < significance_threshold), 
+                    box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +
+    scale_color_manual(values = c("blue", "red")) +
+    labs(title = title, x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
+    theme_minimal()
+}
+
+# significant_all (ext_gene as label)
+create_volcano_plot(sleuth_significant, label_column = "ext_gene")
+
+# lncRNA_result (ext_gene as label)
+create_volcano_plot(lncRNA_result, label_column = "ext_gene")
+
+# protein_coding_result (ext_gene as label)
+create_volcano_plot(protein_coding_result, label_column = "ext_gene")
+
+# NA_coding_result (target_id as label)
+create_volcano_plot(NA_coding_result, label_column = "target_id")
 
 
 # exploratory analysis
+# interactive visualization
+sleuth_live(oe)
+
+# Plot bootstrap estimates for transcript
 plot_bootstrap(sleuth_object, "ENST00000223642.3", units = "est_counts", color_by = "condition")
-sleuth_live(sleuth_object)
+# PCA to visualize sample relationships based on gene expression
 plot_pca(sleuth_object, color_by = 'condition')
+# Group density plot to visualize the distribution of gene expression levels across conditions
 plot_group_density(sleuth_object,
                    use_filtered = TRUE,
                    units = "est_counts",
@@ -145,23 +145,12 @@ plot_group_density(sleuth_object,
                    grouping = setdiff(colnames(sleuth_object$sample_to_covariates),
                                       "sample"), offset = 1)
 
-#comparison with data from paper
+# check if found genes are present in the paper
 df = read_excel("1-s2.0-S147655861830232X-mmc3.xlsx", sheet=4)
 write.csv(df, gsub("xlsx", "4.csv", "1-s2.0-S147655861830232X-mmc3.xlsx"), row.names=FALSE)
 
-#df_one <- read.csv("sleuth_results_full.csv")
 df_one <- read.csv("sleuth_results_significant.csv")
 df_two <- read.csv("parental_vs_para_from_paper.csv")
-
-# Merge the two data frames based on the specified columns
-merged_df <- merge(df_one, df_two, by.x = "ens_gene", by.y = "ensembl_gene_id", all.x = TRUE)
-
-# Count the number of entries from the first CSV that have a match in the second CSV
-matching_entries <- sum(!is.na(merged_df$hgnc_symbol))
-
-# Print the result
-cat("Number of entries from the first CSV found in the second CSV:", matching_entries, "\n")
-
 
 unique_ens_gene <- unique(df_one$ens_gene)
 unique_ensembl_gene_id <- unique(df_two$ensembl_gene_id)
@@ -173,9 +162,4 @@ cat("Unique values in df_two$ensembl_gene_id:", length(unique_ensembl_gene_id), 
 ens_gene_not_in_df_two <- setdiff(unique_ens_gene, unique_ensembl_gene_id)
 cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens_gene_not_in_df_two), "\n")
 ens_gene_not_in_df_two
-
-# Display values that are in df_two but not in df_one
-ens_gene_not_in_df_one <- setdiff(unique_ensembl_gene_id, unique_ens_gene)
-cat("Values in df_two$ens_gene not found in df_one$ens_gene:", length(ens_gene_not_in_df_one), "\n")
-ens_gene_not_in_df_one
 
