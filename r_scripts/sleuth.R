@@ -67,14 +67,13 @@ sleuth_significant <- dplyr::filter(sleuth_results_oe, qval <= 0.05)
 head(sleuth_significant, 20)
 
 sleuth_results_oe
-# Assuming sleuth_results_oe is your data frame
 write.csv(sleuth_results_oe, file = "sleuth_results_full.csv", row.names = FALSE)
 
 # Print or further process the unique gene biotypes
 unique_gene_biotypes <- unique(sleuth_results_oe$gene_biotype)
 print(unique_gene_biotypes)
 
-# Print or further process the unique gene biotypes
+# Print or further process the unique transcript biotypes
 unique_transcript_biotypes <- unique(sleuth_results_oe$transcript_biotype)
 print(unique_transcript_biotypes)
 
