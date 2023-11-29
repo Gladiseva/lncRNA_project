@@ -8,6 +8,8 @@ library("sleuth")
 library(ggplot2)
 install.packages("ggrepel")
 library(ggrepel)
+install.packages("readxl")
+library(readxl)
 set.seed(123)
 # specify where the kallisto results are stored.
 sample_id <- dir(file.path(".", "results"))
@@ -68,6 +70,7 @@ head(sleuth_significant, 20)
 
 sleuth_results_oe
 write.csv(sleuth_results_oe, file = "sleuth_results_full.csv", row.names = FALSE)
+write.csv(sleuth_significant, file = "sleuth_results_significant.csv", row.names = FALSE)
 
 # Print or further process the unique gene biotypes
 unique_gene_biotypes <- unique(sleuth_results_oe$gene_biotype)
@@ -78,23 +81,29 @@ unique_transcript_biotypes <- unique(sleuth_results_oe$transcript_biotype)
 print(unique_transcript_biotypes)
 
 # lncRNA
-lncRNA_result <- subset(sleuth_results_oe, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
+lncRNA_result <- subset(sleuth_significant, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
 head(lncRNA_result)
-write.csv(lncRNA_result, file = "sleuth_results_lncRNA.csv", row.names = FALSE)
+write.csv(lncRNA_result, file = "sleuth_results_lncRNA_significant.csv", row.names = FALSE)
 
 # protein_coding
-protein_coding_result <- subset(sleuth_results_oe, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
+protein_coding_result <- subset(sleuth_significant, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
 head(protein_coding_result)
-write.csv(protein_coding_result, file = "sleuth_results_protein_coding.csv", row.names = FALSE)
+write.csv(protein_coding_result, file = "sleuth_results_protein_coding_significant.csv", row.names = FALSE)
+
+# NAs
+NA_coding_result <- subset(sleuth_significant, is.na(gene_biotype) | is.na(transcript_biotype))
+head(NA_coding_result)
+dim(NA_coding_result)
+write.csv(NA_coding_result, file = "sleuth_results_NAs_significant.csv", row.names = FALSE)
 
 sleuth_live(oe)
 
 # Create a volcano plot
 significance_threshold <- 0.05
-ggplot(sleuth_results_oe, aes(x = b, y = -log10(pval))) +
+ggplot(sleuth_significant, aes(x = b, y = -log10(pval))) +
   geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
   geom_text_repel(aes(label = ext_gene), 
-                  data = subset(sleuth_results_oe, qval < significance_threshold), 
+                  data = subset(sleuth_significant, qval < significance_threshold), 
                   box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
   scale_color_manual(values = c("blue", "red")) +       # Customize colors
   labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
@@ -115,6 +124,14 @@ ggplot(protein_coding_result, aes(x = b, y = -log10(pval))) +
   scale_color_manual(values = c("blue", "red")) +       # Customize colors
   labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
   theme_minimal()
+ggplot(NA_coding_result, aes(x = b, y = -log10(pval))) +
+  geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +  # Highlight significant points
+  geom_text_repel(aes(label = target_id), 
+                  data = subset(NA_coding_result, qval < significance_threshold), 
+                  box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +  # Add gene names for significant points
+  scale_color_manual(values = c("blue", "red")) +       # Customize colors
+  labs(title = "Volcano Plot", x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
+  theme_minimal()
 
 
 # exploratory analysis
@@ -127,3 +144,38 @@ plot_group_density(sleuth_object,
                    trans = "log",
                    grouping = setdiff(colnames(sleuth_object$sample_to_covariates),
                                       "sample"), offset = 1)
+
+#comparison with data from paper
+df = read_excel("1-s2.0-S147655861830232X-mmc3.xlsx", sheet=4)
+write.csv(df, gsub("xlsx", "4.csv", "1-s2.0-S147655861830232X-mmc3.xlsx"), row.names=FALSE)
+
+#df_one <- read.csv("sleuth_results_full.csv")
+df_one <- read.csv("sleuth_results_significant.csv")
+df_two <- read.csv("parental_vs_para_from_paper.csv")
+
+# Merge the two data frames based on the specified columns
+merged_df <- merge(df_one, df_two, by.x = "ens_gene", by.y = "ensembl_gene_id", all.x = TRUE)
+
+# Count the number of entries from the first CSV that have a match in the second CSV
+matching_entries <- sum(!is.na(merged_df$hgnc_symbol))
+
+# Print the result
+cat("Number of entries from the first CSV found in the second CSV:", matching_entries, "\n")
+
+
+unique_ens_gene <- unique(df_one$ens_gene)
+unique_ensembl_gene_id <- unique(df_two$ensembl_gene_id)
+
+cat("Unique values in df_one$ens_gene:", length(unique_ens_gene), "\n")
+cat("Unique values in df_two$ensembl_gene_id:", length(unique_ensembl_gene_id), "\n")
+
+# Display values that are in df_one but not in df_two
+ens_gene_not_in_df_two <- setdiff(unique_ens_gene, unique_ensembl_gene_id)
+cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens_gene_not_in_df_two), "\n")
+ens_gene_not_in_df_two
+
+# Display values that are in df_two but not in df_one
+ens_gene_not_in_df_one <- setdiff(unique_ensembl_gene_id, unique_ens_gene)
+cat("Values in df_two$ens_gene not found in df_one$ens_gene:", length(ens_gene_not_in_df_one), "\n")
+ens_gene_not_in_df_one
+
