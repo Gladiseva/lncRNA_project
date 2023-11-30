@@ -48,7 +48,7 @@ sample2condition <- dplyr::mutate(sample2condition, path = kallisto_dirs)
 # collect gene names with
 mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                          dataset = "hsapiens_gene_ensembl",
-                         host = "https://ensembl.org")
+                         host = "ensembl.org")
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
                                      "external_gene_name", "gene_biotype",
                                      "transcript_biotype"), mart = mart)
@@ -64,15 +64,17 @@ sleuth_object <- sleuth_fit(sleuth_object, ~condition, "full")
 sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
 # OUTPUT: NA values were found during variance shrinkage estimation LOESS
 # These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
+
+#likelihood ratio test (LRT)
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
 
 models(sleuth_object)
 
 # Test significant differences between conditions using the Wald test
 # Wald test for differential expression of isoforms. var oe -> observed2expected
-oe <- sleuth_wt(sleuth_object, which_beta = "conditionparental")
+oe <- sleuth_wt(sleuth_object, which_beta = "conditionparaclonal")
 sleuth_results_oe <- sleuth_results(oe,
-                                    test = "conditionparental",
+                                    test = "conditionparaclonal",
                                     show_all = TRUE)
 
 # top 20 significant genes with a q-value <= 0.05.
@@ -94,8 +96,6 @@ lncRNA_result <- subset(sleuth_results_oe, gene_biotype == "lncRNA" | transcript
 lncRNA_result_top_20 <- head(lncRNA_result, 20)
 write.csv(lncRNA_result, file = "sleuth_results_lncRNA.csv", row.names = FALSE)
 
-lncRNA_result_significant <- subset(sleuth_significant, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
-lncRNA_significant_result_top_20 <- head(lncRNA_result_significant, 20)
 # protein_coding
 protein_coding_result <- subset(sleuth_results_oe, gene_biotype == "protein_coding" | transcript_biotype == "protein_coding")
 protein_coding_result_top_20 <- head(protein_coding_result, 20)
@@ -163,9 +163,9 @@ ens_gene_not_in_df_two
 
 
 # occurencies per gene
-sleuth_genes <- sleuth_gene_table(oe, 'conditionparental', test_type ='wt',
+sleuth_genes <- sleuth_gene_table(oe, 'conditionparaclonal', test_type ='wt',
                                   which_group = 'ext_gene')
-kallisto_output <- read_kallisto("results/3_2/abundance.tsv", read_bootstrap = FALSE)
+
 #normalized expression values and estimated counts as the expression units
 counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "est_counts")
 write.csv(counts_per_replicate, file = "counts_per_replicate.csv", row.names = TRUE)
