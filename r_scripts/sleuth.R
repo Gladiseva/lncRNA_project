@@ -134,8 +134,6 @@ create_volcano_plot(NA_result, label_column = "target_id")
 # interactive visualization
 sleuth_live(oe)
 
-# Plot bootstrap estimates for transcript
-plot_bootstrap(sleuth_object, "ENST00000223642.3", units = "est_counts", color_by = "condition")
 # PCA to visualize sample relationships based on gene expression
 plot_pca(sleuth_object, color_by = 'condition')
 # Group density plot to visualize the distribution of gene expression levels across conditions
@@ -221,3 +219,15 @@ pheatmap(data_matrix,
          scale = "row",        # Scale rows (genes) by default
          main = "Heatmap Example",
          annotation_col = NULL)  # Turn off column annotations
+
+# plot bootstrap , to account for kallisto estimation ENST00000257555.11
+oe <- sleuth_object
+target_id <- "ENST00000257555.11"  # Replace with the actual transcript or gene identifier
+units <- "est_counts"
+color_by <- "condition"  # Replace with the actual grouping variable in your sample metadata
+x_axis_angle <- 50
+divide_groups <- TRUE
+
+# Call the plot_bootstrap function
+plot_bootstrap(oe, target_id, units = units, color_by = color_by,
+               x_axis_angle = x_axis_angle, divide_groups = divide_groups)
