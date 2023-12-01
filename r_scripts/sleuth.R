@@ -1,23 +1,33 @@
-## Instalation
-# Install and load packages
-if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-BiocManager::install(c("rhdf5", "sleuth", "biomaRt"))
-if (!require("devtools")) install.packages("devtools")
-if (!require("ggplot2")) install.packages("ggplot2")
-if (!require("ggrepel")) install.packages("ggrepel")
-if (!require("readxl")) install.packages("readxl")
-install.packages("svglite")
+## Installation and Loading Packages
+# Function to check and install a package
+install_if_missing <- function(package) {
+  if (!requireNamespace(package, quietly = TRUE)) {
+    install.packages(package)
+  }
+}
 
-library("rhdf5")
-library("devtools")
-library("sleuth")
-library("BiocManager")
-library("biomaRt")
-library("ggplot2")
-library("ggrepel")
-library("readxl")
+# List of packages
+required_packages <- c(
+  "BiocManager", "rhdf5", "sleuth", "biomaRt",
+  "devtools", "ggplot2", "ggrepel", "readxl",
+  "svglite", "readr", "dplyr", "pheatmap"
+)
+
+# Install and load packages
+invisible(sapply(required_packages, install_if_missing))
+
+# Load libraries
+library(readr)
+library(dplyr)
+library(rhdf5)
+library(devtools)
+library(sleuth)
+library(BiocManager)
+library(biomaRt)
+library(ggplot2)
+library(ggrepel)
+library(readxl)
 library(svglite)
-install.packages("pheatmap")
 library(pheatmap)
 
 set.seed(123)
@@ -36,27 +46,12 @@ sample2condition <- read.table(file.path(".", "NSCLC_exp_design.txt"),
 # directories must be appended in a new column
 sample2condition <- dplyr::mutate(sample2condition, path = kallisto_dirs)
 
-# sleuth object will store the information about the experiment,
-# and details of the model to be used for differential testing and the results.
-# It is prepared and used with four commands that
-#(1) load the kallisto processed data into the object
-#(2) estimate parameters for the sleuth response error measurement (full) model
-#(3) estimate parameters for the sleuth reduced model
-#(4) perform differential analysis (testing) using the likelihood ratio test.
+# Important: before run prepare_annotation_table.R
+annotation_data <- read.csv("annotation_table_from_ALLandENS.csv")
 
-# add gene names from ENSEMBL using biomaRt (GRCh38)
-# collect gene names with
-mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
-                         dataset = "hsapiens_gene_ensembl",
-                         host = "ensembl.org")
-t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
-                                     "external_gene_name", "gene_biotype",
-                                     "transcript_biotype"), mart = mart)
-t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id,
-                     ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
-# By default the transformation of counts is natural log
+# transformation_function because by default the transformation of counts is natural log
 sleuth_object <- sleuth_prep(sample2condition,
-                             target_mapping = t2g,
+                             target_mapping = annotation_data,
                              read_bootstrap_tpm = TRUE,
                              extra_bootstrap_summary = TRUE,
                              transformation_function = function(x) log2(x + 0.5))
@@ -67,7 +62,6 @@ sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
 
 #likelihood ratio test (LRT)
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
-
 models(sleuth_object)
 
 # Test significant differences between conditions using the Wald test
@@ -88,8 +82,6 @@ write.csv(sleuth_significant, file = "sleuth_results_significant.csv", row.names
 # Print or further process the unique gene/transcript biotypes
 unique_gene_biotypes <- unique(sleuth_results_oe$gene_biotype)
 unique_transcript_biotypes <- unique(sleuth_results_oe$transcript_biotype)
-print(unique_gene_biotypes)
-print(unique_transcript_biotypes)
 
 # lncRNA
 lncRNA_result <- subset(sleuth_results_oe, gene_biotype == "lncRNA" | transcript_biotype == "lncRNA")
@@ -102,33 +94,33 @@ protein_coding_result_top_20 <- head(protein_coding_result, 20)
 write.csv(protein_coding_result, file = "sleuth_results_protein_coding.csv", row.names = FALSE)
 
 # NAs
-NA_result <- subset(sleuth_results_oe, is.na(gene_biotype) | is.na(transcript_biotype))
+NA_result <- sleuth_results_oe[grepl("MSTRG", sleuth_results_oe$target_id), ]
 NA_result_top_20 <- head(NA_result, 20)
 write.csv(NA_result, file = "sleuth_results_NAs.csv", row.names = FALSE)
 
 # Create a volcano plot
-create_volcano_plot <- function(data, label_column, significance_threshold = 0.05, title = "Volcano Plot") {
+create_volcano_plot <- function(data, title = "Volcano Plot") {
   ggplot(data, aes(x = b, y = -log10(pval))) +
-    geom_point(aes(color = qval < significance_threshold), alpha = 0.5, size = 2) +
-    geom_text_repel(aes(label = get(label_column)), 
-                    data = subset(data, qval < significance_threshold), 
+    geom_point(aes(color = qval < 0.05), alpha = 0.5, size = 2) +
+    geom_text_repel(aes(label = ifelse(!is.na(get("ext_gene")), get("ext_gene"), get("ens_gene"))), 
+                    data = subset(data, qval < 0.05), 
                     box.padding = 0.5, point.padding = 0.2, segment.color = "grey50") +
     scale_color_manual(values = c("blue", "red")) +
     labs(title = title, x = "Log2-Fold Change (b)", y = "-log10(p-value)") +
     theme_minimal()
 }
 
-# all (ext_gene as label)
-create_volcano_plot(sleuth_results_oe, label_column = "ext_gene")
+# plot for all values
+create_volcano_plot(sleuth_results_oe)
 
 # lncRNA_result (ext_gene as label)
-create_volcano_plot(lncRNA_result, label_column = "ext_gene")
+create_volcano_plot(lncRNA_result)
 
 # protein_coding_result (ext_gene as label)
-create_volcano_plot(protein_coding_result, label_column = "ext_gene")
+create_volcano_plot(protein_coding_result)
 
 # NA_result (target_id as label)
-create_volcano_plot(NA_result, label_column = "target_id")
+create_volcano_plot(NA_result)
 
 # exploratory analysis
 # interactive visualization
@@ -158,11 +150,6 @@ cat("Unique values in df_two$ensembl_gene_id:", length(unique_ensembl_gene_id), 
 ens_gene_not_in_df_two <- setdiff(unique_ens_gene, unique_ensembl_gene_id)
 cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens_gene_not_in_df_two), "\n")
 ens_gene_not_in_df_two
-
-
-# occurencies per gene
-sleuth_genes <- sleuth_gene_table(oe, 'conditionparaclonal', test_type ='wt',
-                                  which_group = 'ext_gene')
 
 #normalized expression values and estimated counts as the expression units
 counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "est_counts")
@@ -221,7 +208,6 @@ pheatmap(data_matrix,
          annotation_col = NULL)  # Turn off column annotations
 
 # plot bootstrap , to account for kallisto estimation ENST00000257555.11
-oe <- sleuth_object
 target_id <- "ENST00000257555.11"  # Replace with the actual transcript or gene identifier
 units <- "est_counts"
 color_by <- "condition"  # Replace with the actual grouping variable in your sample metadata

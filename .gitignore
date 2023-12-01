@@ -6,3 +6,4 @@ r_scripts.Rproj
 .Rhistory
 *.csv
 *.xlsx
+*.gtf
