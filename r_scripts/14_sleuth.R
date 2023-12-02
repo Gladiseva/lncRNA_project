@@ -54,12 +54,15 @@ sleuth_object <- sleuth_prep(sample2condition,
                              target_mapping = annotation_data,
                              read_bootstrap_tpm = TRUE,
                              extra_bootstrap_summary = TRUE,
+                             gene_mode = TRUE, # remove if only trascript level needed
+                             aggregation_column = 'ens_gene', # remove if only trascript level needed
                              transformation_function = function(x) log2(x + 0.5))
 sleuth_object <- sleuth_fit(sleuth_object, ~condition, "full")
 sleuth_object <- sleuth_fit(sleuth_object, ~1, "reduced")
 # OUTPUT: NA values were found during variance shrinkage estimation LOESS
-# These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
-
+# Transcript level: These are the target ids with NA values: ENST00000361624.2, ENST00000387347.2
+# Gene level: NA values: ENSG00000004848, ENSG00000140873, ENSG00000206052, ENSG00000272894
+# NA values: ENSG00000140873, ENSG00000206052, ENSG00000272894, ENSG00000198804
 #likelihood ratio test (LRT)
 sleuth_object <- sleuth_lrt(sleuth_object, "reduced", "full")
 models(sleuth_object)
@@ -111,16 +114,18 @@ create_volcano_plot <- function(data, title = "Volcano Plot") {
 }
 
 # plot for all values
-create_volcano_plot(sleuth_results_oe)
+create_volcano_plot(sleuth_results_oe, title = "All genes")
 
 # lncRNA_result (ext_gene as label)
-create_volcano_plot(lncRNA_result)
+create_volcano_plot(lncRNA_result, title = "Volcano Plot - lncRNAs")
 
 # protein_coding_result (ext_gene as label)
-create_volcano_plot(protein_coding_result)
+create_volcano_plot(protein_coding_result,
+                    title = "Volcano Plot - Protein coding genes")
 
 # NA_result (target_id as label)
-create_volcano_plot(NA_result)
+create_volcano_plot(NA_result,
+                    title = "Volcano Plot - Novel genes")
 
 # exploratory analysis
 # interactive visualization
@@ -152,11 +157,12 @@ cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens
 ens_gene_not_in_df_two
 
 #normalized expression values and estimated counts as the expression units
-counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "est_counts")
+#counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "est_counts")
+counts_per_replicate <- sleuth_to_matrix(oe, "obs_norm", "scaled_reads_per_base")
 write.csv(counts_per_replicate, file = "counts_per_replicate.csv", row.names = TRUE)
 # Read the data from the CSV file (adjust the file path accordingly)
 ## for all significant top 20
-data <- read.csv("counts_per_replicate.csv", row.names = 1)
+data <- read.csv("counts_per_replicate_gene_level.csv", row.names = 1)
 data_filtered <- data[rownames(data) %in% sleuth_sihnificant_top_20$target_id, ]
 
 data_matrix <- as.matrix(data_filtered)
@@ -165,7 +171,7 @@ data_matrix <- as.matrix(data_filtered)
 pheatmap(data_matrix, 
          cluster_cols = FALSE, # Turn off column clustering
          scale = "row",        # Scale rows (genes) by default
-         main = "Heatmap Example",
+         main = "Significant genes top 20",
          annotation_col = NULL)  # Turn off column annotations
 
 ## for lncRNAs top 20
@@ -178,7 +184,7 @@ data_matrix <- as.matrix(data_filtered)
 pheatmap(data_matrix, 
          cluster_cols = FALSE, # Turn off column clustering
          scale = "row",        # Scale rows (genes) by default
-         main = "Heatmap Example",
+         main = "lncRNAs top 20",
          annotation_col = NULL)  # Turn off column annotations
 
 ## for protein coding top 20
@@ -191,7 +197,7 @@ data_matrix <- as.matrix(data_filtered)
 pheatmap(data_matrix, 
          cluster_cols = FALSE, # Turn off column clustering
          scale = "row",        # Scale rows (genes) by default
-         main = "Heatmap Example",
+         main = "Protein coding genes top 20",
          annotation_col = NULL)  # Turn off column annotations
 
 ## for NA_result_top_20
@@ -204,7 +210,7 @@ data_matrix <- as.matrix(data_filtered)
 pheatmap(data_matrix, 
          cluster_cols = FALSE, # Turn off column clustering
          scale = "row",        # Scale rows (genes) by default
-         main = "Heatmap Example",
+         main = "Novel genes top 20",
          annotation_col = NULL)  # Turn off column annotations
 
 # plot bootstrap , to account for kallisto estimation ENST00000257555.11
