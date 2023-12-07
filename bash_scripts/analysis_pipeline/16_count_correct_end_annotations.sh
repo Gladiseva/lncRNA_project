@@ -5,11 +5,10 @@
 #SBATCH --time=04:00:00
 
 BED_FILES_LOCATION=/data/users/lgladiseva/rna_seq/inregrative_analysis
-BED_FROM_GTF=/data/users/lgladiseva/rna_seq/transcriptome_assembly/ALL_output.bed
 STATS_FILE=$BED_FILES_LOCATION/stats_correct_end_annotation.txt
 
 # Count the total number of lines in the original BED file
-total_transcripts=$(wc -l < $BED_FROM_GTF)
+total_transcripts=$(wc -l < $BED_FILES_LOCATION/ALL_merged_transcripts.bed)
 
 # Count the number of lines
 no_overlap_5prime=$(wc -l < $BED_FILES_LOCATION/no_overlap5prime.bed)
