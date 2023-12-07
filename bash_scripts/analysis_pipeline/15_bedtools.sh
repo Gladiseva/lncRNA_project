@@ -12,8 +12,12 @@ BED_FROM_GTF=/data/users/lgladiseva/rna_seq/transcriptome_assembly/ALL_output.be
 
 mkdir -p $OUTPUT_DIR
 
-# Bedtools intersect for 5' ends
-bedtools intersect -v -a $BED_FROM_GTF -b $REFERENCES/refTSS_v4.1_human_coordinate.hg38.bed > $OUTPUT_DIR/overlap5prime.bed
+## -v option stands for "invert," meaning it selects non-overlapping entries.
+# intersect for 5' ends
+bedtools intersect -v -a $BED_FROM_GTF -b $REFERENCES/refTSS_v4.1_human_coordinate.hg38.bed > $OUTPUT_DIR/no_overlap5prime.bed
 
-# Bedtools intersect for 3' ends
-bedtools intersect -v -a $BED_FROM_GTF -b $REFERENCES/atlas.clusters.2.0.GRCh38.96.bed > $OUTPUT_DIR/overlap3prime.bed
+# intersect for 3' ends
+bedtools intersect -v -a $BED_FROM_GTF -b $REFERENCES/atlas.clusters.2.0.GRCh38.96.bed > $OUTPUT_DIR/no_overlap3prime.bed
+
+# intesect for 3'end and 5'ends
+bedtools intersect -v -a $BED_FROM_GTF -b $REFERENCES/refTSS_v4.1_human_coordinate.hg38.bed $REFERENCES/atlas.clusters.2.0.GRCh38.96.bed > $OUTPUT_DIR/no_overlap53prime.bed
