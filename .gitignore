@@ -8,4 +8,6 @@ r_scripts.Rproj
 *.xlsx
 *.gtf
 *.pdf
+*.bed
+
 
