@@ -10,4 +10,8 @@ r_scripts.Rproj
 *.pdf
 *.bed
 *.zip
+*.tsv
+*.RData
+*.dat
+
 
