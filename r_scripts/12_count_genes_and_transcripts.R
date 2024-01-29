@@ -38,4 +38,4 @@ results_folders <- list.dirs("results", full.names = TRUE, recursive = FALSE)
 all_results <- do.call(rbind, lapply(results_folders, process_folder))
 
 # Save the results to a CSV file
-write.csv(all_results, "summary_kallisto_results_2.csv", row.names = FALSE)
+write.csv(all_results, "summary_kallisto_results.csv", row.names = FALSE)
