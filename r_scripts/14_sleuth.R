@@ -179,28 +179,6 @@ plot_group_density(so_transcript_level,
                    grouping = setdiff(colnames(so_transcript_level$sample_to_covariates),
                                       "sample"), offset = 1)
 
-# check if found genes are present in the paper
-df_one <- read.csv("sleuth_results_significant_tl.csv")
-df_two <- read.csv("parental_vs_para_from_paper.csv")
-
-unique_ens_gene <- unique(df_one$ens_gene)
-unique_ensembl_gene_id <- unique(df_two$ensembl_gene_id)
-
-cat("Unique values in df_one$ens_gene:", length(unique_ens_gene), "\n")
-cat("Unique values in df_two$ensembl_gene_id:", length(unique_ensembl_gene_id), "\n")
-
-# Display values that are in df_one but not in df_two
-ens_gene_not_in_df_two <- setdiff(unique_ens_gene, unique_ensembl_gene_id)
-cat("Values in df_one$ens_gene not found in df_two$ensembl_gene_id:", length(ens_gene_not_in_df_two), "\n")
-ens_gene_not_in_df_two
-# Remove elements containing "MSTRG"
-filtered_genes <- ens_gene_not_in_df_two[!grepl("MSTRG", ens_gene_not_in_df_two)]
-
-# Print the result
-print(filtered_genes)
-length(filtered_genes)
-
-
 # Read the data from the CSV file (adjust the file path accordingly)
 ## for all significant top 20
 data <- read.csv("counts_per_replicate_tl.csv", row.names = 1)
