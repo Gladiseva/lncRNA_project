@@ -22,7 +22,7 @@ transcripts5=$(awk '{++n} END{print n}' $WORKING_DIR/overlap5prime.bed)
 transcripts3=$(awk '{++n} END{print n}' $WORKING_DIR/overlap3prime.bed)
 
 # count novel intergenic transcripts
-# scale -> precision
+# scale indicates precision
 novel_intergenic=$(awk '{++n} END{print n}' $WORKING_DIR/novel_intergenic.bed)
 result5=$(echo "scale=3 ; ($novel_intergenic * 100 / $total ) " | bc )
 echo "Total of novel transcripts: $total" > $WORKING_DIR/statistics.txt
@@ -39,7 +39,7 @@ echo "Percentage of novel transcripts with 5' good annotations: $percentage_5%" 
 percentage_3=$(echo "scale=3 ; ($transcripts3 * 100 / $total ) " | bc )
 echo "Percentage of novel transcripts with  3' good annotations: $percentage_3%" >> $WORKING_DIR/statistics.txt
 
-#Transcripts with protein coding probability > 0.364 are considerated protein coding
+# What percent of my novel transcripts are protein coding (0.364 cutoff)
 protein_coding=$(awk '{if($5 > 0.364) ++n} END{print n}' $WORKING_DIR/novel_coding_potential.dat)
 result=$(echo "scale=3 ; ($protein_coding * 100 / $total ) " | bc )
-echo "Percentage of novel transcripts considered as protein coding (0.364): $result%" >> $WORKING_DIR/statistics.txt
+echo "Percentage of novel transcripts that are protein coding, using 0.364 cutoff: $result%" >> $WORKING_DIR/statistics.txt
