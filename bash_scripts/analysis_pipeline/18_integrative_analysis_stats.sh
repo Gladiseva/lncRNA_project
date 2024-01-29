@@ -31,13 +31,13 @@ echo "Percentage of novel transcripts considered as intergenic: $result5%" >> $W
 
 # calculate percentage
 persentage_5and3=$(echo "scale=3 ; ($transcripts5and3 * 100 / $total ) " | bc )
-echo "Percentage of novel transcripts with 5' and 3' good annotations: $persentage_5and3%" >> $WORKING_DIR/statistics.txt
+echo "Percentage of novel transcripts with good 5' and 3' annotations: $persentage_5and3%" >> $WORKING_DIR/statistics.txt
 
 percentage_5=$(echo "scale=3 ; ($transcripts5 * 100 / $total ) " | bc )
-echo "Percentage of novel transcripts with 5' good annotations: $percentage_5%" >> $WORKING_DIR/statistics.txt
+echo "Percentage of novel transcripts with good 5' annotations: $percentage_5%" >> $WORKING_DIR/statistics.txt
 
 percentage_3=$(echo "scale=3 ; ($transcripts3 * 100 / $total ) " | bc )
-echo "Percentage of novel transcripts with  3' good annotations: $percentage_3%" >> $WORKING_DIR/statistics.txt
+echo "Percentage of novel transcripts with  good 3' annotations: $percentage_3%" >> $WORKING_DIR/statistics.txt
 
 # What percent of my novel transcripts are protein coding (0.364 cutoff)
 protein_coding=$(awk '{if($5 > 0.364) ++n} END{print n}' $WORKING_DIR/novel_coding_potential.dat)
