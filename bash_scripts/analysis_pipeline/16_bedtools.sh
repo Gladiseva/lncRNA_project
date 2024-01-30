@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=32G
+#SBATCH --mem-per-cpu=8G
 #SBATCH --time=04:00:00
 
 module add UHTS/Analysis/BEDTools/2.29.2
@@ -17,3 +17,9 @@ bedtools intersect -wa -s -a $INTEGRATIVE_ANALYSIS/novel5window.bed -b $REFERENC
 
 # 3 prime overlaps
 bedtools intersect -wa -s -a $INTEGRATIVE_ANALYSIS/novel3window.bed -b $REFERENCES/atlas.clusters.2.0.GRCh38.96.bed > $INTEGRATIVE_ANALYSIS/overlap3prime.bed
+
+# 5 prime overlaps
+bedtools intersect -wa -s -a $INTEGRATIVE_ANALYSIS/annotated5window.bed -b $REFERENCES/refTSS_v4.1_human_coordinate.hg38.bed > $INTEGRATIVE_ANALYSIS/annotated_overlap5prime.bed
+
+# 3 prime overlaps
+bedtools intersect -wa -s -a $INTEGRATIVE_ANALYSIS/annotated3window.bed -b $REFERENCES/atlas.clusters.2.0.GRCh38.96.bed > $INTEGRATIVE_ANALYSIS/annotated_overlap3prime.bed

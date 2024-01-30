@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=16G
+#SBATCH --mem-per-cpu=4G
 #SBATCH --time=04:00:00
 
 GTF=/data/users/lgladiseva/rna_seq/transcriptome_assembly
@@ -20,7 +20,7 @@ awk 'match($4,!/MSTR/) {print} ' $INTEGRATIVE_ANALYSIS/transcripts.bed > $INTEGR
 #get novel transcripts
 awk 'match($4,/MSTR/) {print} ' $INTEGRATIVE_ANALYSIS/transcripts.bed > $INTEGRATIVE_ANALYSIS/transcripts_novel.bed
 
-## window of 100 nt
+## NOVEL window of 100 nt
 # 5 prime of novel transcripts
 awk '{if($6=="+") print $1"\t"($2-50)"\t"($2+50)"\t"$4"\t"$5"\t"$6 ; else print $1"\t"($3-50)"\t"($3+50)"\t"$4"\t"$5"\t"$6}' $INTEGRATIVE_ANALYSIS/transcripts_novel.bed > $INTEGRATIVE_ANALYSIS/tmp_novel5window.bed
 #correction of negative number
@@ -33,3 +33,17 @@ awk '{if($3<0 || $2<0) print $1"\t"0"\t"$3"\t"$4"\t"$5"\t"$6; else print $1"\t"$
 
 # Remove temporary files
 rm "$INTEGRATIVE_ANALYSIS/tmp_novel5window.bed" "$INTEGRATIVE_ANALYSIS/tmp_novel3window.bed"
+
+## ANNOTATED window of 100 nt
+# 5 prime of annotated transcripts
+awk '{if($6=="+") print $1"\t"($2-50)"\t"($2+50)"\t"$4"\t"$5"\t"$6 ; else print $1"\t"($3-50)"\t"($3+50)"\t"$4"\t"$5"\t"$6}' $INTEGRATIVE_ANALYSIS/transcripts_annotated.bed > $INTEGRATIVE_ANALYSIS/tmp_annotated5window.bed
+#correction of negative number
+awk '{if($3<0 || $2<0) print $1"\t"0"\t"$3"\t"$4"\t"$5"\t"$6; else print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' $INTEGRATIVE_ANALYSIS/tmp_annotated5window.bed > $INTEGRATIVE_ANALYSIS/annotated5window.bed
+
+# 3 prime of annotated transcripts
+awk '{if($6=="+") print $1"\t"($3-50)"\t"($3+50)"\t"$4"\t"$5"\t"$6; else print $1"\t"($2-50)"\t"($2+50)"\t"$4"\t"$5"\t"$6}' $INTEGRATIVE_ANALYSIS/transcripts_annotated.bed > $INTEGRATIVE_ANALYSIS/tmp_annotated3window.bed
+#correction of negative number
+awk '{if($3<0 || $2<0) print $1"\t"0"\t"$3"\t"$4"\t"$5"\t"$6; else print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' $INTEGRATIVE_ANALYSIS/tmp_annotated3window.bed > $INTEGRATIVE_ANALYSIS/annotated3window.bed
+
+# Remove temporary files
+rm "$INTEGRATIVE_ANALYSIS/tmp_annotated5window.bed" "$INTEGRATIVE_ANALYSIS/tmp_annotated3window.bed"
