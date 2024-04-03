@@ -72,16 +72,3 @@ R scripts can be run locally.
    - 19_construct_table_for_IA.R
 7. **Step 7: Prioritization:**
    - 20_prioritization.R
-
-## Where to look for the intermidiate results
-cd /data/users/lgladiseva/rna_seq
-
-./expression_quantification
-./inregrative_analysis
-./mapped_reads
-./quality_control
-./statistics
-./transcriptome_assembly
-
-## Two final CSVs can be found in
-/data/users/lgladiseva/rna_seq/RESULTS
